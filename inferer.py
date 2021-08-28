@@ -80,7 +80,7 @@ class TextRecogInferer:
             image = image_tensors.to(device)
             # For max length prediction
             length_for_pred = torch.IntTensor([self.opt.batch_max_length] * batch_size).to(device)
-            text_for_pred = torch.LongTensor(batch_size, opt.batch_max_length + 1).fill_(0).to(device)
+            text_for_pred = torch.LongTensor(batch_size, self.opt.batch_max_length + 1).fill_(0).to(device)
 
             if 'CTC' in self.opt.Prediction:
                 preds = self.model(image, text_for_pred)
@@ -123,7 +123,7 @@ def get_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument('--workers', type=int, help='number of data loading workers', default=4)
     parser.add_argument('--batch_size', type=int, default=192, help='input batch size')
-    parser.add_argument('--saved_model', required=True, help="path to saved_model to evaluation")
+    parser.add_argument('--saved_model', default='best_accuracy.pth', help="path to saved_model to evaluation")
     """ Data processing """
     parser.add_argument('--batch_max_length', type=int, default=80, help='maximum-label-length')
     parser.add_argument('--imgH', type=int, default=32, help='the height of the input image')
@@ -135,10 +135,10 @@ def get_parser():
     parser.add_argument('--sensitive', action='store_true', help='for sensitive character mode')
     parser.add_argument('--PAD', action='store_true', help='whether to keep ratio then pad for image resize')
     """ Model Architecture """
-    parser.add_argument('--Transformation', type=str, required=True, help='Transformation stage. None|TPS')
-    parser.add_argument('--FeatureExtraction', type=str, required=True, help='FeatureExtraction stage. VGG|RCNN|ResNet')
-    parser.add_argument('--SequenceModeling', type=str, required=True, help='SequenceModeling stage. None|BiLSTM')
-    parser.add_argument('--Prediction', type=str, required=True, help='Prediction stage. CTC|Attn')
+    parser.add_argument('--Transformation', type=str, default=None, help='Transformation stage. None|TPS')
+    parser.add_argument('--FeatureExtraction', type=str, default='VGG', help='FeatureExtraction stage. VGG|RCNN|ResNet')
+    parser.add_argument('--SequenceModeling', type=str, default=None, help='SequenceModeling stage. None|BiLSTM')
+    parser.add_argument('--Prediction', type=str, default='CTC', help='Prediction stage. CTC|Attn')
     parser.add_argument('--num_fiducial', type=int, default=20, help='number of fiducial points of TPS-STN')
     parser.add_argument('--input_channel', type=int, default=1, help='the number of input channel of Feature extractor')
     parser.add_argument('--output_channel', type=int, default=512,
@@ -147,21 +147,39 @@ def get_parser():
     opt = parser.parse_args()
     return opt
 
+class default_args():
+    def __init__(self,model_path):
+        self.workers = 4
+        self.batch_size = 192
+        self.saved_model = model_path
+        self.batch_max_length = 80
+        self.imgH = 32
+        self.imgW = 256
+        self.rgb = True
+        self.character = """ầỏỉờbdúnuyỷủổrkxlqằwịộc,ẹựàề#đg;a)ĩv5iìừùâý6ễh0ọ/mỵẽ9ẵứ>ỗ"ã?ă8!ấ`ảỳf&ạ(3êửếz2ô4|ụểõ+1éởốồữậưũepỡó.ẩá“~ỹ=oệèơẻ:òs7íj”ợ%ặẳớ*ắ' tẫ-"""
+        self.sensitive = True
+        self.PAD = True
+        self.Transformation = 'TPS'
+        self.FeatureExtraction = 'ResNet'
+        self.SequenceModeling = 'BiLSTM'
+        self.Prediction = 'Attn'
+        self.num_fiducial = 20
+        self.input_channel = 3
+        self.output_channel = 512
+        self.hidden_size = 256
 
 if __name__ == '__main__':
-    fns = [
-        'data/product/crop_end_text/abbott/abbott_grow/abbott_grow_1/0000/0.jpg',
-        'data/product/crop_end_text/abbott/abbott_grow/abbott_grow_1/0000/1.jpg',
-        'data/product/crop_end_text/abbott/abbott_grow/abbott_grow_1/0000/2.jpg',
-    ]
-
-    opt = get_parser()
+    #load model
+    model_path = 'text-recognition/best_accuracy.pth'
+    opt = default_args(model_path)
     inferer = TextRecogInferer(opt)
-    images = [
-        Image.open(fn).convert('RGB') for fn in fns
-    ]
+
+    #inference
+    img = cv2.imread('/content/img10.jpg')
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    im_pil = Image.fromarray(img)
 
     preds = inferer.infer(
-        images=images,
+        images=[im_pil],
     )
     print(preds)
