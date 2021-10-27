@@ -307,6 +307,27 @@ class default_args():
         self.input_channel = 3
         self.output_channel = 512
         self.hidden_size = 256
+ 
+class default_args_v1():
+    def __init__(self,model_path):
+        self.workers = 0
+        self.batch_size = 150
+        self.saved_model = model_path
+        self.batch_max_length = 80
+        self.imgH = 32
+        self.imgW = 100
+        self.rgb = False
+        self.character = """ầỏỉờbdúnuyỷủổrkxlqằwịộc,ẹựàề#đg;a)ĩv5iìừùâý6ễh0ọ/mỵẽ9ẵứ>ỗ"ã?ă8!ấ`ảỳf&ạ(3êửếz2ô4|ụểõ+1éởốồữậưũepỡó.ẩá“~ỹ=oệèơẻ:òs7íj”ợ%ặẳớ*ắ' tẫ-"""
+        self.sensitive = False
+        self.PAD = False
+        self.Transformation = 'TPS'
+        self.FeatureExtraction = 'ResNet'
+        self.SequenceModeling = 'BiLSTM'
+        self.Prediction = 'Attn'
+        self.num_fiducial = 20
+        self.input_channel = 1
+        self.output_channel = 512
+        self.hidden_size = 256
 
 if __name__ == '__main__':
     #load model
